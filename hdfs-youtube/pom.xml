@@ -1,0 +1,60 @@
+<project xmlns = "http://maven.apache.org/POM/4.0.0" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation = "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>learn-everyday</artifactId>
+		<groupId>com.me</groupId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>youtube-project</artifactId>
+	<packaging>jar</packaging>
+
+	<name>youtube-project</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<hadoop-common.version>2.7.2</hadoop-common.version>
+		<hadoop-common.core>1.2.1</hadoop-common.core>
+	</properties>
+
+	<dependencies>
+		<!--  HADOOP DEPENDENCIES -->
+
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+			<version>${hadoop-common.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-core</artifactId>
+			<version>${hadoop-common.core}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-jar-plugin</artifactId>
+			<configuration>
+				<archive>
+					<manifest>
+						<mainClass>com.me.youtube.YoutubeAnalysisDriver</mainClass>
+					</manifest>
+				</archive>
+			</configuration>
+		</plugin>
+		</plugins>
+
+	</build>
+</project>
