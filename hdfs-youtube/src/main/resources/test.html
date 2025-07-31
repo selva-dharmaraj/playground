@@ -2,14 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Mermaid Sequence Diagram with Zoom & Pan</title>
+    <title>Mermaid Sequence Diagram with Live Editor</title>
     <style>
         html, body {
             margin: 0;
-            padding: 0;
             height: 100%;
             overflow: hidden;
             font-family: sans-serif;
+        }
+
+        #wrapper {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+
+        #editorPanel {
+            width: 0;
+            transition: width 0.3s ease;
+            background-color: #f9f9f9;
+            overflow: hidden;
+            border-left: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editorPanel.expanded {
+            width: 40%;
+        }
+
+        #editorPanel textarea {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        #viewer {
+            flex: 1;
+            position: relative;
         }
 
         #diagramContainer {
@@ -22,28 +57,63 @@
             width: 100%;
             height: 100%;
         }
+
+        #toggleButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #updateButton {
+            padding: 8px;
+            border-top: 1px solid #ccc;
+            background: #eee;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        #updateButton:hover {
+            background: #ddd;
+        }
     </style>
 </head>
 <body>
-<div id="diagramContainer">
-    <div class="mermaid" id="inquirySequenceDiagram">
-        sequenceDiagram
-        participant Alice
-        participant Bob
-        Alice->>Bob: Hello Bob, how are you?
-        Bob-->>Alice: I am good thanks!
-        Alice-)Bob: See you later!
+<div id="wrapper">
+    <div id="viewer">
+        <button id="toggleButton">✏️ Edit</button>
+        <div id="diagramContainer">
+            <div class="mermaid" id="inquirySequenceDiagram">
+                sequenceDiagram
+                participant Alice
+                participant Bob
+                Alice->>Bob: Hello Bob, how are you?
+                Bob-->>Alice: I am good thanks!
+                Alice-)Bob: See you later!
+            </div>
+        </div>
+    </div>
+    <div id="editorPanel">
+      <textarea id="mermaidInput">sequenceDiagram
+  participant Alice
+  participant Bob
+  Alice->>Bob: Hello Bob, how are you?
+  Bob-->>Alice: I am good thanks!
+  Alice-)Bob: See you later!</textarea>
+        <div id="updateButton">🔄 Update Diagram</div>
     </div>
 </div>
 
-<!-- SVG Pan Zoom Library -->
+<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-
-<!-- Mermaid ESM Loader -->
 <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.esm.min.mjs';
 
-    // Configure Mermaid
+    // Mermaid setup
     await mermaid.initialize({
         startOnLoad: false,
         theme: "forest",
@@ -56,26 +126,45 @@
         }
     });
 
-    // Render Mermaid
-    await mermaid.run({ querySelector: '#inquirySequenceDiagram' });
+    async function renderMermaid(code) {
+        const diagramContainer = document.getElementById("diagramContainer");
+        diagramContainer.innerHTML = `<div class="mermaid" id="inquirySequenceDiagram">${code}</div>`;
 
-    // Enable zoom and pan
-    const svgElement = document.querySelector('#inquirySequenceDiagram svg');
-    if (svgElement) {
-        svgElement.style.height = "100vh";
-        svgElement.style.width = "100%";
-        svgPanZoom(svgElement, {
-            zoomEnabled: true,
-            controlIconsEnabled: false,
-            fit: true,
-            center: true,
-            minZoom: 0.5,
-            maxZoom: 10,
-            zoomScaleSensitivity: 0.2
-        });
-    } else {
-        console.warn("❌ Mermaid diagram SVG not found.");
+        await mermaid.run({ querySelector: '#inquirySequenceDiagram' });
+
+        const svg = diagramContainer.querySelector("svg");
+        if (svg) {
+            svg.style.width = "100%";
+            svg.style.height = "100%";
+            svgPanZoom(svg, {
+                zoomEnabled: true,
+                controlIconsEnabled: false,
+                fit: true,
+                center: true,
+                minZoom: 0.5,
+                maxZoom: 10,
+                zoomScaleSensitivity: 0.2
+            });
+        }
     }
+
+    // Initial render
+    const inputEl = document.getElementById("mermaidInput");
+    renderMermaid(inputEl.value);
+
+    // Handle update
+    document.getElementById("updateButton").addEventListener("click", () => {
+        renderMermaid(inputEl.value);
+    });
+
+    // Expand/collapse editor
+    const editorPanel = document.getElementById("editorPanel");
+    const toggleButton = document.getElementById("toggleButton");
+
+    toggleButton.addEventListener("click", () => {
+        editorPanel.classList.toggle("expanded");
+        toggleButton.textContent = editorPanel.classList.contains("expanded") ? "❌ Close Editor" : "✏️ Edit";
+    });
 </script>
 </body>
 </html>
