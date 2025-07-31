@@ -2,55 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Mermaid Sequence Diagram with Live Editor</title>
+    <title>Mermaid Diagram with Fullscreen Zoom</title>
     <style>
         html, body {
             margin: 0;
             height: 100%;
             overflow: hidden;
             font-family: sans-serif;
+            background: #f4f4f4;
         }
 
         #wrapper {
-            display: flex;
+            position: relative;
             height: 100%;
             width: 100%;
-        }
-
-        #editorPanel {
-            width: 0;
-            transition: width 0.3s ease;
-            background-color: #f9f9f9;
-            overflow: hidden;
-            border-left: 1px solid #ccc;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #editorPanel.expanded {
-            width: 40%;
-        }
-
-        #editorPanel textarea {
-            flex: 1;
-            width: 100%;
-            border: none;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 14px;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        #viewer {
-            flex: 1;
-            position: relative;
         }
 
         #diagramContainer {
             width: 100%;
             height: 100%;
-            background-color: #f4f4f4;
         }
 
         .mermaid {
@@ -58,53 +28,37 @@
             height: 100%;
         }
 
-        #toggleButton {
+        #fullscreenButton {
             position: absolute;
             top: 10px;
             right: 10px;
-            z-index: 10;
-            padding: 5px 10px;
-            font-size: 12px;
+            z-index: 999;
+            padding: 6px 12px;
+            background-color: #444;
+            color: #fff;
+            border: none;
             cursor: pointer;
+            font-size: 13px;
+            border-radius: 4px;
         }
 
-        #updateButton {
-            padding: 8px;
-            border-top: 1px solid #ccc;
-            background: #eee;
-            cursor: pointer;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        #updateButton:hover {
-            background: #ddd;
+        #fullscreenButton:hover {
+            background-color: #222;
         }
     </style>
 </head>
 <body>
 <div id="wrapper">
-    <div id="viewer">
-        <button id="toggleButton">✏️ Edit</button>
-        <div id="diagramContainer">
-            <div class="mermaid" id="inquirySequenceDiagram">
-                sequenceDiagram
-                participant Alice
-                participant Bob
-                Alice->>Bob: Hello Bob, how are you?
-                Bob-->>Alice: I am good thanks!
-                Alice-)Bob: See you later!
-            </div>
+    <button id="fullscreenButton">⛶ Full Screen</button>
+    <div id="diagramContainer">
+        <div class="mermaid" id="mermaidDiagram">
+            sequenceDiagram
+            participant Alice
+            participant Bob
+            Alice->>Bob: Hello Bob, how are you?
+            Bob-->>Alice: I am good thanks!
+            Alice-)Bob: See you later!
         </div>
-    </div>
-    <div id="editorPanel">
-      <textarea id="mermaidInput">sequenceDiagram
-  participant Alice
-  participant Bob
-  Alice->>Bob: Hello Bob, how are you?
-  Bob-->>Alice: I am good thanks!
-  Alice-)Bob: See you later!</textarea>
-        <div id="updateButton">🔄 Update Diagram</div>
     </div>
 </div>
 
@@ -113,7 +67,6 @@
 <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.esm.min.mjs';
 
-    // Mermaid setup
     await mermaid.initialize({
         startOnLoad: false,
         theme: "forest",
@@ -126,14 +79,24 @@
         }
     });
 
-    async function renderMermaid(code) {
-        const diagramContainer = document.getElementById("diagramContainer");
-        diagramContainer.innerHTML = `<div class="mermaid" id="inquirySequenceDiagram">${code}</div>`;
+    await mermaid.run({ querySelector: '#mermaidDiagram' });
 
-        await mermaid.run({ querySelector: '#inquirySequenceDiagram' });
+    const fullscreenButton = document.getElementById("fullscreenButton");
+    const diagramContainer = document.getElementById("diagramContainer");
 
+    fullscreenButton.addEventListener("click", () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            diagramContainer.requestFullscreen();
+        }
+    });
+
+    // Handle zoom only in fullscreen
+    document.addEventListener("fullscreenchange", () => {
         const svg = diagramContainer.querySelector("svg");
-        if (svg) {
+
+        if (document.fullscreenElement === diagramContainer && svg) {
             svg.style.width = "100%";
             svg.style.height = "100%";
             svgPanZoom(svg, {
@@ -145,25 +108,11 @@
                 maxZoom: 10,
                 zoomScaleSensitivity: 0.2
             });
+        } else {
+            // Remove pan-zoom instance when exiting fullscreen
+            const clone = svg.cloneNode(true);
+            svg.parentNode.replaceChild(clone, svg); // Remove svg-pan-zoom bindings
         }
-    }
-
-    // Initial render
-    const inputEl = document.getElementById("mermaidInput");
-    renderMermaid(inputEl.value);
-
-    // Handle update
-    document.getElementById("updateButton").addEventListener("click", () => {
-        renderMermaid(inputEl.value);
-    });
-
-    // Expand/collapse editor
-    const editorPanel = document.getElementById("editorPanel");
-    const toggleButton = document.getElementById("toggleButton");
-
-    toggleButton.addEventListener("click", () => {
-        editorPanel.classList.toggle("expanded");
-        toggleButton.textContent = editorPanel.classList.contains("expanded") ? "❌ Close Editor" : "✏️ Edit";
     });
 </script>
 </body>
