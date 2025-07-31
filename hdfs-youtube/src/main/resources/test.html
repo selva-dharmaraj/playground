@@ -1,79 +1,73 @@
-<div id="container" style="width:100%; height:600px; overflow:hidden; position:relative; background:#fff; cursor:grab;">
-    <div id="inner" style="display:inline-block; transform-origin:0 0;">
-        <div class="mermaid" id="diagram">
-            sequenceDiagram
-            participant Alice
-            participant Bob
-            Alice->>Bob: Hello Bob, how are you?
-            Bob-->>Alice: I am good thanks!
-            Alice-)Bob: See you later!
-        </div>
+<div id="diagramContainer" style="width:100%; height:600px; overflow:hidden; position:relative;">
+    <div class="mermaid" id="diagram">
+        sequenceDiagram
+        participant Alice
+        participant Bob
+        Alice->>Bob: Hello Bob, how are you?
+        Bob-->>Alice: I am good thanks!
+        Alice-)Bob: See you later!
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.13.10/mermaid.min.js"></script>
 <script>
-    // Zoom and Pan Logic
-    const container = document.getElementById('container');
-    const inner = document.getElementById('inner');
+    mermaid.initialize({ startOnLoad: false });
 
-    let scale = 1.0;
-    let originX = 0;
-    let originY = 0;
-    let isPanning = false;
-    let startX, startY;
+    function enableSvgPanZoom(svg) {
+        let viewBox = svg.viewBox.baseVal;
+        if (!viewBox || viewBox.width === 0 || viewBox.height === 0) {
+            const bbox = svg.getBBox();
+            svg.setAttribute("viewBox", `0 0 ${bbox.width} ${bbox.height}`);
+            viewBox = svg.viewBox.baseVal;
+        }
 
-    container.addEventListener('wheel', function (e) {
-        e.preventDefault();
-        const zoomFactor = 1.1;
-        const oldScale = scale;
-        scale *= e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+        let panX = 0, panY = 0;
+        let scale = 1;
+        let isDragging = false;
+        let startX, startY;
 
-        const rect = inner.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left;
-        const offsetY = e.clientY - rect.top;
+        svg.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 1.1 : 0.9;
+            scale *= delta;
+            svg.setAttribute("transform", `scale(${scale}) translate(${panX}, ${panY})`);
+            svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width / scale} ${viewBox.height / scale}`);
+        });
 
-        originX = (offsetX + originX) * (scale / oldScale) - offsetX;
-        originY = (offsetY + originY) * (scale / oldScale) - offsetY;
-        applyTransform();
-    });
+        svg.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            svg.style.cursor = "grabbing";
+        });
 
-    container.addEventListener('mousedown', function (e) {
-        isPanning = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        container.style.cursor = 'grabbing';
-    });
+        window.addEventListener("mouseup", () => {
+            isDragging = false;
+            svg.style.cursor = "grab";
+        });
 
-    container.addEventListener('mousemove', function (e) {
-        if (!isPanning) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        startX = e.clientX;
-        startY = e.clientY;
-        originX -= dx;
-        originY -= dy;
-        applyTransform();
-    });
-
-    container.addEventListener('mouseup', function () {
-        isPanning = false;
-        container.style.cursor = 'grab';
-    });
-
-    container.addEventListener('mouseleave', function () {
-        isPanning = false;
-        container.style.cursor = 'grab';
-    });
-
-    function applyTransform() {
-        inner.style.transform = `translate(${-originX}px, ${-originY}px) scale(${scale})`;
+        window.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            const dx = (e.clientX - startX) * (viewBox.width / svg.clientWidth);
+            const dy = (e.clientY - startY) * (viewBox.height / svg.clientHeight);
+            startX = e.clientX;
+            startY = e.clientY;
+            viewBox.x -= dx;
+            viewBox.y -= dy;
+            svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+        });
     }
 
-    // Mermaid Render After DOM Load
-    window.addEventListener('load', function () {
-        mermaid.initialize({ startOnLoad: false });
-        const el = document.querySelectorAll('.mermaid');
-        mermaid.init(undefined, el);
+    window.addEventListener("load", function () {
+        mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+
+        // Wait for diagram to render before attaching zoom behavior
+        setTimeout(() => {
+            const svg = document.querySelector("#diagramContainer svg");
+            if (svg) {
+                svg.style.cursor = "grab";
+                enableSvgPanZoom(svg);
+            }
+        }, 500); // Delay to ensure SVG is drawn
     });
 </script>
