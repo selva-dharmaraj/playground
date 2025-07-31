@@ -1,48 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Mermaid Sequence Diagram with Mouse Zoom</title>
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'default',
-            sequence: {
-                useMaxWidth: true
-            }
-        });
-    </script>
-    <style>
-        html, body {
-            margin: 0;
-            height: 100%;
-            overflow: hidden;
-            font-family: sans-serif;
-        }
-
-        #container {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #fff;
-            position: relative;
-            cursor: grab;
-        }
-
-        #inner {
-            display: inline-block;
-            transform-origin: 0 0;
-        }
-
-        .mermaid {
-            max-width: none !important;
-        }
-    </style>
-</head>
-<body>
-<div id="container">
-    <div id="inner">
+<div id="container" style="width:100%; height:600px; overflow:hidden; position:relative; background:#fff; cursor:grab;">
+    <div id="inner" style="display:inline-block; transform-origin:0 0;">
         <div class="mermaid" id="diagram">
             sequenceDiagram
             participant Alice
@@ -54,7 +11,10 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.13.10/mermaid.min.js"></script>
 <script>
+    mermaid.initialize({ startOnLoad: true });
+
     const container = document.getElementById('container');
     const inner = document.getElementById('inner');
 
@@ -64,33 +24,21 @@
     let isPanning = false;
     let startX, startY;
 
-    // Zoom on wheel
     container.addEventListener('wheel', function (e) {
         e.preventDefault();
-
         const zoomFactor = 1.1;
         const oldScale = scale;
+        scale *= e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
 
-        // Zoom in or out
-        if (e.deltaY < 0) {
-            scale *= zoomFactor;
-        } else {
-            scale /= zoomFactor;
-        }
-
-        // Get mouse position relative to diagram
         const rect = inner.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
 
-        // Adjust origin to zoom around cursor
         originX = (offsetX + originX) * (scale / oldScale) - offsetX;
         originY = (offsetY + originY) * (scale / oldScale) - offsetY;
-
         applyTransform();
     });
 
-    // Drag to pan
     container.addEventListener('mousedown', function (e) {
         isPanning = true;
         startX = e.clientX;
@@ -123,5 +71,3 @@
         inner.style.transform = `translate(${-originX}px, ${-originY}px) scale(${scale})`;
     }
 </script>
-</body>
-</html>
