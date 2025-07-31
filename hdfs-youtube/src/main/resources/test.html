@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Mermaid Sequence Diagram with Mouse Zoom</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                useMaxWidth: true
+            }
+        });
+    </script>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #fff;
+            position: relative;
+            cursor: grab;
+        }
+
+        #inner {
+            display: inline-block;
+            transform-origin: 0 0;
+        }
+
+        .mermaid {
+            max-width: none !important;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <div id="inner">
+        <div class="mermaid" id="diagram">
+            sequenceDiagram
+            participant Alice
+            participant Bob
+            Alice->>Bob: Hello Bob, how are you?
+            Bob-->>Alice: I am good thanks!
+            Alice-)Bob: See you later!
+        </div>
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('container');
+    const inner = document.getElementById('inner');
+
+    let scale = 1.0;
+    let originX = 0;
+    let originY = 0;
+    let isPanning = false;
+    let startX, startY;
+
+    // Zoom on wheel
+    container.addEventListener('wheel', function (e) {
+        e.preventDefault();
+
+        const zoomFactor = 1.1;
+        const oldScale = scale;
+
+        // Zoom in or out
+        if (e.deltaY < 0) {
+            scale *= zoomFactor;
+        } else {
+            scale /= zoomFactor;
+        }
+
+        // Get mouse position relative to diagram
+        const rect = inner.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
+        // Adjust origin to zoom around cursor
+        originX = (offsetX + originX) * (scale / oldScale) - offsetX;
+        originY = (offsetY + originY) * (scale / oldScale) - offsetY;
+
+        applyTransform();
+    });
+
+    // Drag to pan
+    container.addEventListener('mousedown', function (e) {
+        isPanning = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        container.style.cursor = 'grabbing';
+    });
+
+    container.addEventListener('mousemove', function (e) {
+        if (!isPanning) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        startX = e.clientX;
+        startY = e.clientY;
+        originX -= dx;
+        originY -= dy;
+        applyTransform();
+    });
+
+    container.addEventListener('mouseup', function () {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+
+    container.addEventListener('mouseleave', function () {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+
+    function applyTransform() {
+        inner.style.transform = `translate(${-originX}px, ${-originY}px) scale(${scale})`;
+    }
+</script>
+</body>
+</html>
