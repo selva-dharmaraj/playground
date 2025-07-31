@@ -2,71 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Mermaid Diagram with Fullscreen Zoom</title>
+    <title>Mermaid Sequence Diagram with Zoom & Pan</title>
     <style>
         html, body {
             margin: 0;
+            padding: 0;
             height: 100%;
             overflow: hidden;
             font-family: sans-serif;
-            background: #f4f4f4;
-        }
-
-        #wrapper {
-            position: relative;
-            height: 100%;
-            width: 100%;
         }
 
         #diagramContainer {
             width: 100%;
             height: 100%;
+            background-color: #f4f4f4;
         }
 
         .mermaid {
             width: 100%;
             height: 100%;
         }
-
-        #fullscreenButton {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 999;
-            padding: 6px 12px;
-            background-color: #444;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            border-radius: 4px;
-        }
-
-        #fullscreenButton:hover {
-            background-color: #222;
-        }
     </style>
 </head>
 <body>
-<div id="wrapper">
-    <button id="fullscreenButton">⛶ Full Screen</button>
-    <div id="diagramContainer">
-        <div class="mermaid" id="mermaidDiagram">
-            sequenceDiagram
-            participant Alice
-            participant Bob
-            Alice->>Bob: Hello Bob, how are you?
-            Bob-->>Alice: I am good thanks!
-            Alice-)Bob: See you later!
-        </div>
+<div id="diagramContainer">
+    <div class="mermaid" id="inquirySequenceDiagram">
+        sequenceDiagram
+        participant Alice
+        participant Bob
+        Alice->>Bob: Hello Bob, how are you?
+        Bob-->>Alice: I am good thanks!
+        Alice-)Bob: See you later!
     </div>
 </div>
 
-<!-- Libraries -->
+<!-- SVG Pan Zoom Library -->
 <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+
+<!-- Mermaid ESM Loader -->
 <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.esm.min.mjs';
 
+    // Configure Mermaid
     await mermaid.initialize({
         startOnLoad: false,
         theme: "forest",
@@ -79,41 +56,26 @@
         }
     });
 
-    await mermaid.run({ querySelector: '#mermaidDiagram' });
+    // Render Mermaid
+    await mermaid.run({ querySelector: '#inquirySequenceDiagram' });
 
-    const fullscreenButton = document.getElementById("fullscreenButton");
-    const diagramContainer = document.getElementById("diagramContainer");
-
-    fullscreenButton.addEventListener("click", () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            diagramContainer.requestFullscreen();
-        }
-    });
-
-    // Handle zoom only in fullscreen
-    document.addEventListener("fullscreenchange", () => {
-        const svg = diagramContainer.querySelector("svg");
-
-        if (document.fullscreenElement === diagramContainer && svg) {
-            svg.style.width = "100%";
-            svg.style.height = "100%";
-            svgPanZoom(svg, {
-                zoomEnabled: true,
-                controlIconsEnabled: false,
-                fit: true,
-                center: true,
-                minZoom: 0.5,
-                maxZoom: 10,
-                zoomScaleSensitivity: 0.2
-            });
-        } else {
-            // Remove pan-zoom instance when exiting fullscreen
-            const clone = svg.cloneNode(true);
-            svg.parentNode.replaceChild(clone, svg); // Remove svg-pan-zoom bindings
-        }
-    });
+    // Enable zoom and pan
+    const svgElement = document.querySelector('#inquirySequenceDiagram svg');
+    if (svgElement) {
+        svgElement.style.height = "100vh";
+        svgElement.style.width = "100%";
+        svgPanZoom(svgElement, {
+            zoomEnabled: true,
+            controlIconsEnabled: false,
+            fit: true,
+            center: true,
+            minZoom: 0.5,
+            maxZoom: 10,
+            zoomScaleSensitivity: 0.2
+        });
+    } else {
+        console.warn("❌ Mermaid diagram SVG not found.");
+    }
 </script>
 </body>
 </html>
